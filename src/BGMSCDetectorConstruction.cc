@@ -27,20 +27,34 @@
 using namespace CLHEP;
 
 ///////////////////////////////////////////////////////////////////
-#define CELL_SIDE (12.6 * um)
-#define CLUSTER_SIDE (4.6 * um)
-#define VESICLE_COUNT 164
-#define VESICLE_DIAM (260 * nm)
-#define GNP_DIAM (50 * nm) // diameter!!
-#define GNP_COUNT 1000
+#define WORLD_SIDE (100. * um)
+#define VESSEL_OUTER_DIAM (10.0 * um)
+#define VESSEL_INNER_DIAM (8.0 * um)
+#define VESSEL_HIGHT (10.0 * um)
+#define GNP_DIAM (100 * nm) // diameter!!
+#define GNP_COUNT 9317 // Number!
+#define VESSEL_SPACE (5. * um)
+#define VESSEL_SHELL 5
+#define CELL_COUNT 6
+#define SHELL1_DIAM (5.0 * um)
+#define SHELL2_DIAM (10.0 * um)
+#define SHELL3_DIAM (15.0 * um)
+#define SHELL4_DIAM (20.0 * um)
+#define SHELL5_DIAM (25.0 * um)
+#define SHELL_FRC20NM_0_10 0.4332
+#define SHELL_FRC20NM_10_20 0.2594
+#define SHELL_FRC20NM_20_30 0.1431
+#define SHELL_FRC20NM_30_40 0.08949
+#define SHELL_FRC20NM_40_50 0.07479
 ///////////////////////////////////////////////////////////////////
 
 BGMSCDetectorConstruction::BGMSCDetectorConstruction()
     :fStepLimit(NULL)
 {
-    m_dCellSide = CELL_SIDE;
+    m_dWorldSide = WORLD_SIDE;
     m_nGnpCount = GNP_COUNT;
-    m_strDistribution = "Cluster";
+    m_strDistribution = "Constrained";   // Constrained  Random None 8HPI
+    m_nCellCount = CELL_COUNT;
 }
 
 G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
@@ -51,9 +65,12 @@ G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
     G4LogicalVolumeStore::GetInstance()->Clean();
     G4SolidStore::GetInstance()->Clean();
 
-    G4VisAttributes* visAttributes = new G4VisAttributes;
-    visAttributes->SetForceWireframe(true);
-    visAttributes->SetForceAuxEdgeVisible(true);
+    G4VisAttributes* pVisAttributesEndotherial = new G4VisAttributes;
+    pVisAttributesEndotherial->SetForceWireframe(true);
+    pVisAttributesEndotherial->SetForceAuxEdgeVisible(true);
+    pVisAttributesEndotherial->SetForceSolid(false);
+    pVisAttributesEndotherial->SetVisibility(true);
+    pVisAttributesEndotherial->SetColor(1.0, 0.0, 0.0); // red
 
     // Build materials
     G4NistManager* nistManager = G4NistManager::Instance();
@@ -61,22 +78,42 @@ G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
     G4Material* vacuum = nistManager->FindOrBuildMaterial("G4_Galactic");
     G4Material* water = nistManager->FindOrBuildMaterial("G4_WATER");
 
-    // Define Cell
-    G4Box* pCellBox = new G4Box("CellBox", CELL_SIDE/2, CELL_SIDE/2, CELL_SIDE/2);
-    G4LogicalVolume *pCellLogic = new G4LogicalVolume(pCellBox, water, "CellLog");
-    G4VPhysicalVolume *pCellPhys = new G4PVPlacement(0, G4ThreeVector(), pCellLogic, "CellLog", 0, false, 0);
+    // Define World
+    G4Box* pWorldBox = new G4Box("WorldBox", WORLD_SIDE/2, WORLD_SIDE/2, WORLD_SIDE/2);
+    G4LogicalVolume *pWorldLogic = new G4LogicalVolume(pWorldBox, water, "WorldLog");
+    G4VPhysicalVolume *pWorldPhys = new G4PVPlacement(0, G4ThreeVector(), pWorldLogic, "WorldPhys", 0, false, 0);
 
-    if (m_strDistribution == "Homogeneous")
+//    // Define Endotherial cell
+//    G4Tubs* pEndotherialTubs = new G4Tubs("EndotherialTubs", VESSEL_INNER_DIAM/2, VESSEL_OUTER_DIAM/2, VESSEL_HIGHT/2, 0*deg, 360*deg);
+//    G4LogicalVolume *pEndotherialLogic = new G4LogicalVolume(pEndotherialTubs, water, "EndotherialLog");
+//    G4VPhysicalVolume *pEndotherialPhys = new G4PVPlacement(0, G4ThreeVector(), pEndotherialLogic, "EndotherialPhys", pWorldLogic, 0, 0);
+//    pEndotherialLogic->SetVisAttributes(pVisAttributesEndotherial);
+
+    // Parameterize each Endotherial cell.
+    for (int nCellIdx = 0; nCellIdx < m_nCellCount; nCellIdx++)
     {
-        DistributeGnpsRandom(pCellLogic);
+        G4RotationMatrix* rotm = new G4RotationMatrix;
+        rotm->rotateZ((nCellIdx+1) * 60*deg - 90*deg); //Set the first position 0 oclock., clock wise.
+
+        G4Tubs* pEndotherialTubs = new G4Tubs("EndotherialTubs", VESSEL_INNER_DIAM/2, VESSEL_OUTER_DIAM/2, VESSEL_HIGHT/2, 0*deg, 60*deg);
+        G4LogicalVolume *pEndotherialLogic = new G4LogicalVolume(pEndotherialTubs, water, "EndotherialLog");
+        G4VPhysicalVolume *EndotherialPhys = new G4PVPlacement(rotm, G4ThreeVector(), pEndotherialLogic, "EndotherialPhys", pWorldLogic, 0, nCellIdx);
+        pEndotherialLogic->SetVisAttributes(pVisAttributesEndotherial);
     }
-    else if(m_strDistribution == "Cluster")
+
+    if (m_strDistribution == "Constrained")
     {
-        SVesicleInfo aryVesicleInfo[VESICLE_COUNT];
-        DistributeVesiclesInSphereCluster(pCellLogic, aryVesicleInfo);
-        DistributeGnpsInVesicles(pCellLogic, aryVesicleInfo);
+        DistributeGnpsSurface(pWorldLogic);
     }
-    else if(m_strDistribution == "None")
+    else if (m_strDistribution == "Random")
+    {
+        DistributeGnpsRandom(pWorldLogic);
+    }
+    else if (m_strDistribution == "8HPI")
+    {
+        //DistributeGnps8PHI(pWorldLogic);
+    }
+    else if (m_strDistribution == "None")
     {
     }
     else
@@ -87,15 +124,20 @@ G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
     G4double maxStep = 1*nm;
     fStepLimit = new G4UserLimits(maxStep);
 
-    return pCellPhys;
+    return pWorldPhys;
 }
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-///////////////////////////HOMOGENEOUS////////////////////////////////////////
-// Distribute GNP randomly in the cell (without vesicles).
-void BGMSCDetectorConstruction::DistributeGnpsRandom(G4LogicalVolume *pCellLog)
+///////////////////////////CONSTRAINED////////////////////////////////////////
+// Distribute GNP randomly on the inner surface of the blood vessel.
+void BGMSCDetectorConstruction::DistributeGnpsSurface(G4LogicalVolume *pWorldLogic)
 {
+    G4Material *pMaterialWater = G4NistManager::Instance()->FindOrBuildMaterial("G4_WATER");
+    G4Material *pMaterialGold = G4NistManager::Instance()->FindOrBuildMaterial("G4_Au");
+    assert(pMaterialWater != NULL);
+    assert(pMaterialGold != NULL);
+
     struct SGnpInfo
     {
         double dPosX;
@@ -105,8 +147,113 @@ void BGMSCDetectorConstruction::DistributeGnpsRandom(G4LogicalVolume *pCellLog)
 
     SGnpInfo *aryGnpInfo = new SGnpInfo [m_nGnpCount];
 
+    // Set visible attributes
+    G4VisAttributes* pVisAttributes = new G4VisAttributes;
+    pVisAttributes->SetForceWireframe(true);
+    pVisAttributes->SetForceAuxEdgeVisible(true);
+    pVisAttributes->SetForceSolid(false);
+    pVisAttributes->SetVisibility(true);
+    pVisAttributes->SetColor(255. / 255., 215. / 255., 0.); // gold
+
+    // Create the Sphere object
+    G4Sphere* pGnpSphere = new G4Sphere("GNP", 0., GNP_DIAM / 2, 0*deg, 360*deg, 0*deg, 180*deg);
+    G4LogicalVolume *pGnpLog = new G4LogicalVolume(pGnpSphere, pMaterialGold, "GNPLogic");
+
+    printf("Distributing GNPs randomly...");
+    G4int ary[360]={0};
+
+    for (int nGnpIdx = 0; nGnpIdx < m_nGnpCount; nGnpIdx++)
+    {
+        retry:
+        // Compute a random position for the GNP
+        double dTheta = G4UniformRand() * 360.*deg;
+        double dGnpX = ((VESSEL_INNER_DIAM/2.-GNP_DIAM/2) * cos(dTheta));
+        double dGnpY = ((VESSEL_INNER_DIAM/2.-GNP_DIAM/2) * sin(dTheta));
+        double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
+
+                // Special case for one GNP at the center.
+                if (m_nGnpCount == 1)
+                {
+                    dGnpX = 0.0;
+                    dGnpY = 0.0;
+                    dGnpZ = 0.0;
+                }
+
+                // Check if this GNP is over-lapping an existing GNP
+                for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
+                {
+                    double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
+                    double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
+                    double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
+
+                    double dx = dExistingX - dGnpX;
+                    double dy = dExistingY - dGnpY;
+                    double dz = dExistingZ - dGnpZ;
+
+                    // Don't bother computing sqrt if the distance is large on any axis.
+                    //if ((fabs(dx) <= GNP_DIAM) && (fabs(dy) <= GNP_DIAM) && (fabs(dz) <= GNP_DIAM))
+                    if (fabs(dx) > GNP_DIAM) continue;
+                    if (fabs(dy) > GNP_DIAM) continue;
+                    if (fabs(dz) > GNP_DIAM) continue;
+
+                    double dDist = sqrt(dx*dx + dy*dy + dz*dz);
+                    if (dDist <= GNP_DIAM)
+                        goto retry;
+                }
+                printf("%d (%le, %le, %le)\n", nGnpIdx, dGnpX, dGnpY, dGnpZ);
+
+                G4double r = VESSEL_INNER_DIAM/2.;
+                G4double Cos = cos(dGnpX/r);
+                G4double theta = acos(Cos)*180/M_PI;
+//                if (dGnpX<0 && dGnpY>0) theta = theta+90; //2nd
+//                else if(dGnpX<0 && dGnpY<0) theta = theta+180; //3rd
+//                else if(dGnpX>0 && dGnpY<0) theta = theta+270; //4th
+
+                for (int i=0; i<360; i++)
+                {
+                    if((i<=theta) && (theta<(i+1)))
+                    {
+                        ary[i] += 1;
+                    }
+                }
+
+                int nCopyNumber = nGnpIdx; //Why?
+
+                new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
+
+                pGnpLog->SetVisAttributes(pVisAttributes);
+
+                aryGnpInfo[nGnpIdx].dPosX = dGnpX;
+                aryGnpInfo[nGnpIdx].dPosY = dGnpY;
+                aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
+    }
+    FILE* fp =fopen("position.txt", "wt");
+    for (int i=0; i<360; i++)
+    {
+        printf("%d %d\n", i, ary[i]);
+        fprintf(fp, "%d %d\n", i, ary[i]);
+    }
+    fclose(fp);
+    delete [] aryGnpInfo;
+}
+
+///////////////////////////RANDOM////////////////////////////////////////
+// Distribute GNP randomly in the blood vessel.
+void BGMSCDetectorConstruction::DistributeGnpsRandom(G4LogicalVolume *pWorldLogic)
+{
+    G4Material *pMaterialWater = G4NistManager::Instance()->FindOrBuildMaterial("G4_WATER");
     G4Material *pMaterialGold = G4NistManager::Instance()->FindOrBuildMaterial("G4_Au");
+    assert(pMaterialWater != NULL);
     assert(pMaterialGold != NULL);
+
+    struct SGnpInfo
+    {
+        double dPosX;
+        double dPosY;
+        double dPosZ;
+    };
+
+    SGnpInfo *aryGnpInfo = new SGnpInfo [m_nGnpCount];
 
     // Set visible attributes
     G4VisAttributes* pVisAttributes = new G4VisAttributes;
@@ -126,9 +273,11 @@ void BGMSCDetectorConstruction::DistributeGnpsRandom(G4LogicalVolume *pCellLog)
     {
         retry:
         // Compute a random position for the GNP
-        double dGnpX = (CELL_SIDE * G4UniformRand()) - CELL_SIDE/2.0; //set x between -6.3um and 6.3um
-        double dGnpY = (CELL_SIDE * G4UniformRand()) - CELL_SIDE/2.0;
-        double dGnpZ = (CELL_SIDE * G4UniformRand()) - CELL_SIDE/2.0;
+        double dTheta = G4UniformRand() * 2*M_PI;
+        double dRand = G4UniformRand();
+        double dGnpX = (sqrt(dRand) * (VESSEL_INNER_DIAM/2.-GNP_DIAM/2) * cos(dTheta));
+        double dGnpY = (sqrt(dRand) * (VESSEL_INNER_DIAM/2.-GNP_DIAM/2) * sin(dTheta));
+        double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
 
                 // Special case for one GNP at the center.
                 if (m_nGnpCount == 1)
@@ -163,197 +312,319 @@ void BGMSCDetectorConstruction::DistributeGnpsRandom(G4LogicalVolume *pCellLog)
 
                 int nCopyNumber = nGnpIdx; //Why?
 
-                new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pCellLog, false, nCopyNumber);
+                new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
 
                 pGnpLog->SetVisAttributes(pVisAttributes);
 
-                aryGnpInfo[nGnpIdx].dPosX = dGnpX; //Why?
+                aryGnpInfo[nGnpIdx].dPosX = dGnpX;
                 aryGnpInfo[nGnpIdx].dPosY = dGnpY;
                 aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
     }
     delete [] aryGnpInfo;
 }
 
-///////////////////////////CLUSTER////////////////////////////////////////
-void BGMSCDetectorConstruction::DistributeVesiclesInSphereCluster(G4LogicalVolume* pCellLog, SVesicleInfo aryVesicleInfo[])
-{
-    G4Material* pMaterialWater = G4NistManager::Instance()->FindOrBuildMaterial("G4_WATER"); //"G4_Au"
-    assert(pMaterialWater != NULL);
+///////////////////////////8HPI////////////////////////////////////////
+// Distribute GNP with migration after 8 hour post injection (8HPI)
+//void BGMSCDetectorConstruction::DistributeGnps8PHI(G4LogicalVolume *pWorldLogic)
+//{
+//    G4VisAttributes* pVisAttributesGold = new G4VisAttributes;
+//    pVisAttributesGold->SetForceWireframe(true);
+//    pVisAttributesGold->SetForceAuxEdgeVisible(true);
+//    pVisAttributesGold->SetForceSolid(false);
+//    pVisAttributesGold->SetVisibility(true);
+//    pVisAttributesGold->SetColor(255. / 255., 215. / 255., 0.); // gold
 
-    // Set visible attributes
-    G4VisAttributes* pVisClusterAttributes = new G4VisAttributes;
-    pVisClusterAttributes->SetForceWireframe(true);
-    pVisClusterAttributes->SetForceAuxEdgeVisible(true);
-    pVisClusterAttributes->SetForceSolid(false);
-    pVisClusterAttributes->SetVisibility(true);
-    pVisClusterAttributes->SetColor(1.0, 1.0, 1.0);
+//    G4Material *pMaterialWater = G4NistManager::Instance()->FindOrBuildMaterial("G4_WATER");
+//    G4Material *pMaterialGold = G4NistManager::Instance()->FindOrBuildMaterial("G4_Au");
+//    assert(pMaterialWater != NULL);
+//    assert(pMaterialGold != NULL);
 
-    G4VisAttributes* pVisVesicleAttributes = new G4VisAttributes;
-    pVisVesicleAttributes->SetForceWireframe(true);
-    pVisVesicleAttributes->SetForceAuxEdgeVisible(true);
-    pVisVesicleAttributes->SetForceSolid(false);
-    pVisVesicleAttributes->SetVisibility(true);
-    pVisVesicleAttributes->SetColor(0.0, 1.0, 1.0);
+////////This is just for visualization//////
+////    G4VisAttributes* pVisAttributes = new G4VisAttributes;
+////    pVisAttributes->SetForceWireframe(true);
+////    pVisAttributes->SetForceAuxEdgeVisible(true);
+////    pVisAttributes->SetForceSolid(false);
+////    pVisAttributes->SetVisibility(true);
+////    pVisAttributes->SetColor(0.0, 1.0, 1.0); // cyan
 
-    double dClusterRadius = CLUSTER_SIDE / 2.;
-    double dClusterX = 0.0;
-    double dClusterY = 0.0;
-    double dClusterZ = 0.0;
+////    for (int nVesselShellIdx = 0; nVesselShellIdx < VESSEL_SHELL; nVesselShellIdx++)
+////    {
+////        G4Tubs* pVesselShellTubs = new G4Tubs("VesselShellTubs", VESSEL_SPACE*nVesselShellIdx, VESSEL_SPACE*(nVesselShellIdx+1), VESSEL_HIGHT/2., 0*deg, 360*deg);
+////        G4LogicalVolume *pVesselShellLogic = new G4LogicalVolume(pVesselShellTubs, pMaterialWater, "VesselShellLog");
+////        G4VPhysicalVolume *pVesselShellPhys = new G4PVPlacement(0, G4ThreeVector(), pVesselShellLogic, "VesselShellLog", pWorldLogic, 0, 0);
+////        pVesselShellLogic->SetVisAttributes(pVisAttributes);
+////    }
+/////////////////////////////////////////////
 
-    for (int nVesicleIdx = 0; nVesicleIdx < VESICLE_COUNT; nVesicleIdx++)
-    {
-        retry:
-        // Generate a random point on the vesicle
-        double dTheta = G4UniformRand() * 360.*deg;
-        double dPhi = (180.*deg * G4UniformRand());
-        double dRho = dClusterRadius * G4UniformRand();
-        double dVesicleX = dClusterX + dRho*cos(dTheta)*sin(dPhi);
-        double dVesicleY = dClusterY + dRho*sin(dTheta)*sin(dPhi);
-        double dVesicleZ = dClusterZ + dRho*cos(dPhi);
+//    G4VisAttributes* pVisAttributesEndotherial = new G4VisAttributes;
+//    pVisAttributesEndotherial->SetForceWireframe(true);
+//    pVisAttributesEndotherial->SetForceAuxEdgeVisible(true);
+//    pVisAttributesEndotherial->SetForceSolid(false);
+//    pVisAttributesEndotherial->SetVisibility(true);
+//    pVisAttributesEndotherial->SetColor(1.0, 0.0, 0.0); // red
 
-        // Check if this vesicle is over-lapping an existing vesicle.
-        for (int nExistingIdx = 0; nExistingIdx < nVesicleIdx; nExistingIdx++)
-        {
-            double dExistingX = aryVesicleInfo[nExistingIdx].dPosX;
-            double dExistingY = aryVesicleInfo[nExistingIdx].dPosY;
-            double dExistingZ = aryVesicleInfo[nExistingIdx].dPosZ;
-
-            double dx = dExistingX - dVesicleX;
-            double dy = dExistingY - dVesicleY;
-            double dz = dExistingZ - dVesicleZ;
-
-            double dDist = sqrt(dx*dx+dy*dy+dz*dz);
-            if(dDist <= VESICLE_DIAM)
-                goto retry;
-        }
-
-        // OK, this position is good!
-        printf("%d (%le, %le, %le)\n", nVesicleIdx, dVesicleX, dVesicleY, dVesicleZ);
+//    // Define Endotherial cell
+//    G4Tubs* pEndotherialTubs = new G4Tubs("EndotherialTubs", VESSEL_INNER_DIAM / 2, VESSEL_OUTER_DIAM / 2, VESSEL_HIGHT / 2, 0*deg, 360*deg);
+//    G4LogicalVolume *pEndotherialLogic = new G4LogicalVolume(pEndotherialTubs, pMaterialWater, "EndotherialLog");
+//    G4VPhysicalVolume *pEndotherialPhys = new G4PVPlacement(0, G4ThreeVector(), pEndotherialLogic, "EndotherialPhys", pWorldLogic, 0, 0);
+//    pEndotherialLogic->SetVisAttributes(pVisAttributesEndotherial);
 
 
+//    struct SGnpInfo
+//    {
+//        double dPosX;
+//        double dPosY;
+//        double dPosZ;
+//    };
 
+//    SGnpInfo *aryGnpInfo = new SGnpInfo [m_nGnpCount];
 
-        ///////////////////////Visualization of cluster
-        G4Sphere* pClusterSphere = new G4Sphere("Cluster", 0, (CLUSTER_SIDE/2), 0.*deg, 360.*deg, 0.*deg, 180.*deg);
-        G4LogicalVolume* pClusterLog = new G4LogicalVolume(pClusterSphere, pMaterialWater, "Cluster");
+//    // Create the Sphere object
+//    G4Sphere* pGnpSphere = new G4Sphere("GNP", 0., GNP_DIAM / 2, 0*deg, 360*deg, 0*deg, 180*deg);
+//    G4LogicalVolume *pGnpLog = new G4LogicalVolume(pGnpSphere, pMaterialGold, "GNPLogic");
 
-        G4RotationMatrix* rotm = new G4RotationMatrix;
-        rotm->rotateX(90*deg);
+//    printf("Distributing GNPs randomly...");
 
-        new G4PVPlacement(rotm, G4ThreeVector(0, 0, 0), pClusterLog, "Cluster", pCellLog, false, 0);
+//    if (GNP_DIAM == 20 * nm)
+//    {
+//        for (int nGnpIdx = 0; nGnpIdx < m_nGnpCount; nGnpIdx++)
+//        {
+//            G4int GNP_COUNT_0_10 = GNP_COUNT*SHELL_FRC20NM_0_10;
+//            if (0 <= nGnpIdx && nGnpIdx < GNP_COUNT_0_10) // Shell1
+//            {
+//                retry1:
+//                // Compute a random position for the GNP
+//                double dTheta = G4UniformRand() * 360.*deg;
+//                double dGnpX = (SHELL1_DIAM/2. * G4UniformRand() * cos(dTheta));
+//                double dGnpY = (SHELL1_DIAM/2. * G4UniformRand() * sin(dTheta));
+//                double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
 
-        pClusterLog->SetVisAttributes(pVisClusterAttributes);
-        ///////////////////////Visualization of cluster
+//                // Check if this GNP is over-lapping an existing GNP
+//                for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
+//                {
+//                    double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
+//                    double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
+//                    double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
 
-        ///////////////////////Visualization of vesicles
-        G4Sphere* pVesicleSphere = new G4Sphere("Vesicle", 0, (VESICLE_DIAM/2), 0.*deg, 360.*deg, 0.*deg, 180.*deg);
-        G4LogicalVolume* pVesicleLog = new G4LogicalVolume(pVesicleSphere, pMaterialWater, "Vesicle");
+//                    double dx = dExistingX - dGnpX;
+//                    double dy = dExistingY - dGnpY;
+//                    double dz = dExistingZ - dGnpZ;
 
-        int nCopyNumber = nVesicleIdx;
-        //G4RotationMatrix* rotm = new G4RotationMatrix;
-        rotm->rotateX(90*deg);
+//                    // Don't bother computing sqrt if the distance is large on any axis.
+//                    //if ((fabs(dx) <= GNP_DIAM) && (fabs(dy) <= GNP_DIAM) && (fabs(dz) <= GNP_DIAM))
+////                    if (fabs(dx) > GNP_DIAM) continue;
+////                    if (fabs(dy) > GNP_DIAM) continue;
+////                    if (fabs(dz) > GNP_DIAM) continue;
 
-        new G4PVPlacement(rotm, G4ThreeVector(dVesicleX, dVesicleY, dVesicleZ), pVesicleLog, "Vesicle", pCellLog, false, nCopyNumber);
+//                    double dDist = sqrt(dx*dx + dy*dy + dz*dz);
+//                    if (dDist <= GNP_DIAM)
+//                        goto retry1;
 
-        pVesicleLog->SetVisAttributes(pVisVesicleAttributes);
-        ///////////////////////Visualization of vesicles
+//                    printf("%d (%le, %le, %le)\n", nGnpIdx, dGnpX, dGnpY, dGnpZ);
 
+//                    int nCopyNumber = nGnpIdx;
+//                    new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
+//                    pGnpLog->SetVisAttributes(pVisAttributesGold);
 
-        aryVesicleInfo[nVesicleIdx].dPosX = dVesicleX; //Pass the Vesicle Position to the array and in order to access from other functions.
-        aryVesicleInfo[nVesicleIdx].dPosY = dVesicleY;
-        aryVesicleInfo[nVesicleIdx].dPosZ = dVesicleZ;
-    }
+//                    aryGnpInfo[nGnpIdx].dPosX = dGnpX;
+//                    aryGnpInfo[nGnpIdx].dPosY = dGnpY;
+//                    aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
+//                }
+//            }
+//            else if (GNP_COUNT * SHELL_FRC20NM_0_10 <= nGnpIdx && GNP_COUNT*SHELL_FRC20NM_10_20) // Shell2
+//            {
+//                retry2:
+//                // Compute a random position for the GNP
+//                double dTheta = G4UniformRand() * 360.*deg;
+//                double dGnpX = (SHELL2_DIAM/2. * G4UniformRand() * cos(dTheta));
+//                double dGnpY = (SHELL2_DIAM/2. * G4UniformRand() * sin(dTheta));
+//                double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
 
-}
+//                // Check if this GNP is in the inner shell
+//                double dWhichShell = sqrt(dGnpX*dGnpX + dGnpY*dGnpY);
+//                if (dWhichShell < SHELL1_DIAM)
+//                    goto retry2;
 
-void BGMSCDetectorConstruction::DistributeGnpsInVesicles(G4LogicalVolume *pCellLog, SVesicleInfo aryVesicleInfo[])
-{
-    struct SGnpInfo
-    {
-        double dPosX;
-        double dPosY;
-        double dPosZ;
-        int nVesicleIdx;
-    };
+//                // Check if this GNP is over-lapping an existing GNP
+//                for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
+//                {
+//                    double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
+//                    double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
+//                    double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
 
-    SGnpInfo *aryGnpInfo = new SGnpInfo [m_nGnpCount];
+//                    double dx = dExistingX - dGnpX;
+//                    double dy = dExistingY - dGnpY;
+//                    double dz = dExistingZ - dGnpZ;
 
-    G4Material *pMaterialGold = G4NistManager::Instance()->FindOrBuildMaterial("G4_Au");
-    assert(pMaterialGold != NULL);
+//                    // Don't bother computing sqrt if the distance is large on any axis.
+//                    //if ((fabs(dx) <= GNP_DIAM) && (fabs(dy) <= GNP_DIAM) && (fabs(dz) <= GNP_DIAM))
+//                    if (fabs(dx) > GNP_DIAM) continue;
+//                    if (fabs(dy) > GNP_DIAM) continue;
+//                    if (fabs(dz) > GNP_DIAM) continue;
 
-    // Set visible attributes
-    G4VisAttributes* pVisAttributes = new G4VisAttributes;
-    pVisAttributes->SetForceWireframe(true);
-    pVisAttributes->SetForceAuxEdgeVisible(true);
-    pVisAttributes->SetForceSolid(false);
-    pVisAttributes->SetVisibility(true);
-    pVisAttributes->SetColor(255. / 255., 215. / 255., 0.); // gold
+//                    double dDist = sqrt(dx*dx + dy*dy + dz*dz);
+//                    if (dDist <= GNP_DIAM)
+//                        goto retry2;
 
-    for (int nGnpIdx = 0; nGnpIdx < m_nGnpCount; nGnpIdx++)
-    {
-        retry:
-        // Select a vesicle at random
-        int nVesicleIdx = int(G4UniformRand() * VESICLE_COUNT);
-        double dVesicleX = aryVesicleInfo[nVesicleIdx].dPosX;
-        double dVesicleY = aryVesicleInfo[nVesicleIdx].dPosY;
-        double dVesicleZ = aryVesicleInfo[nVesicleIdx].dPosZ;
+//                    printf("%d (%le, %le, %le)\n", nGnpIdx, dGnpX, dGnpY, dGnpZ);
 
-        // Generate a random on the vesicle
-        // NOTE: Distribute throughout the vessicle, not only on surface.
-        double dTheta = G4UniformRand() * 360.*deg;
-        double dPhi = (180.*deg * G4UniformRand());
-        double dVesicleRadius = VESICLE_DIAM / 2. - GNP_DIAM / 2.; //Make sure the GNPs don't exeed the vesicle surface (GNP_DIAM/2)
-        double dGnpX = dVesicleX + dVesicleRadius*cos(dTheta)*sin(dPhi);
-        double dGnpY = dVesicleY + dVesicleRadius*sin(dTheta)*sin(dPhi);
-        double dGnpZ = dVesicleZ + dVesicleRadius*cos(dPhi);
+//                    int nCopyNumber = nGnpIdx;
+//                    new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
+//                    pGnpLog->SetVisAttributes(pVisAttributesGold);
 
-        // Check if this GNP is over-lapping an exisitng GNP
-        for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
-        {
-            // Focus on the same vesicle
-            int nExistingVesicleIdx = aryGnpInfo[nExistingGnpIdx].nVesicleIdx;
-            if (nExistingVesicleIdx == nVesicleIdx)
-            {
-                double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
-                double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
-                double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
+//                    aryGnpInfo[nGnpIdx].dPosX = dGnpX;
+//                    aryGnpInfo[nGnpIdx].dPosY = dGnpY;
+//                    aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
+//                }
+//            }
+//            else if (GNP_COUNT * SHELL_FRC20NM_10_20 <= nGnpIdx && GNP_COUNT*SHELL_FRC20NM_20_30) // Shell3
+//            {
+//                retry3:
+//                // Compute a random position for the GNP
+//                double dTheta = G4UniformRand() * 360.*deg;
+//                double dGnpX = (SHELL3_DIAM/2. * G4UniformRand() * cos(dTheta));
+//                double dGnpY = (SHELL3_DIAM/2. * G4UniformRand() * sin(dTheta));
+//                double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
 
-                double dx = dExistingX - dGnpX;
-                double dy = dExistingY - dGnpY;
-                double dz = dExistingZ - dGnpZ;
+//                // Check if this GNP is in the inner shell
+//                double dWhichShell = sqrt(dGnpX*dGnpX + dGnpY*dGnpY);
+//                if (dWhichShell < SHELL2_DIAM)
+//                    goto retry3;
 
-                // Don't bother computing sqrt if the distance is large on any axis.
-                if (fabs(dx) > GNP_DIAM) continue;
-                if (fabs(dy) > GNP_DIAM) continue;
-                if (fabs(dz) > GNP_DIAM) continue;
+//                // Check if this GNP is over-lapping an existing GNP
+//                for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
+//                {
+//                    double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
+//                    double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
+//                    double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
 
-                double dDist = sqrt(dx*dx+dy*dy+dz*dz);
-                if (dDist <= GNP_DIAM)
-                    goto retry;
-            }
+//                    double dx = dExistingX - dGnpX;
+//                    double dy = dExistingY - dGnpY;
+//                    double dz = dExistingZ - dGnpZ;
 
-        }
-        printf("%d %d (%le, %le, %le)\n", nGnpIdx, nVesicleIdx, dGnpX, dGnpY, dGnpZ);
+//                    // Don't bother computing sqrt if the distance is large on any axis.
+//                    //if ((fabs(dx) <= GNP_DIAM) && (fabs(dy) <= GNP_DIAM) && (fabs(dz) <= GNP_DIAM))
+//                    if (fabs(dx) > GNP_DIAM) continue;
+//                    if (fabs(dy) > GNP_DIAM) continue;
+//                    if (fabs(dz) > GNP_DIAM) continue;
 
-        G4Sphere* pGnpSphere = new G4Sphere("GNP", 0., GNP_DIAM/2, 0*deg, 360*deg, 0*deg, 180*deg);
-        G4LogicalVolume *pGnpLog = new G4LogicalVolume(pGnpSphere, pMaterialGold, "GNPLogic");
+//                    double dDist = sqrt(dx*dx + dy*dy + dz*dz);
+//                    if (dDist <= GNP_DIAM)
+//                        goto retry3;
 
-        int nCopyNumber = nGnpIdx;
+//                    printf("%d (%le, %le, %le)\n", nGnpIdx, dGnpX, dGnpY, dGnpZ);
 
-        G4RotationMatrix* rotm = new G4RotationMatrix;
-        rotm->rotateX(180*deg);
+//                    int nCopyNumber = nGnpIdx;
+//                    new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
+//                    pGnpLog->SetVisAttributes(pVisAttributesGold);
 
-        new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pCellLog, false, nCopyNumber);
+//                    aryGnpInfo[nGnpIdx].dPosX = dGnpX;
+//                    aryGnpInfo[nGnpIdx].dPosY = dGnpY;
+//                    aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
+//                }
+//            }
+//            else if (GNP_COUNT * SHELL_FRC20NM_20_30 <= nGnpIdx && GNP_COUNT*SHELL_FRC20NM_30_40) // Shell4
+//            {
+//                retry4:
+//                // Compute a random position for the GNP
+//                double dTheta = G4UniformRand() * 360.*deg;
+//                double dGnpX = (SHELL4_DIAM/2. * G4UniformRand() * cos(dTheta));
+//                double dGnpY = (SHELL4_DIAM/2. * G4UniformRand() * sin(dTheta));
+//                double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
 
-        pGnpLog->SetVisAttributes(pVisAttributes);
+//                // Check if this GNP is in the inner shell
+//                double dWhichShell = sqrt(dGnpX*dGnpX + dGnpY*dGnpY);
+//                if (dWhichShell < SHELL3_DIAM)
+//                    goto retry4;
 
-        aryGnpInfo[nGnpIdx].dPosX = dGnpX;
-        aryGnpInfo[nGnpIdx].dPosY = dGnpY;
-        aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
-        aryGnpInfo[nGnpIdx].nVesicleIdx = nVesicleIdx;
-    }
-    delete [] aryGnpInfo;
-}
+//                // Check if this GNP is over-lapping an existing GNP
+//                for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
+//                {
+//                    double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
+//                    double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
+//                    double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
+
+//                    double dx = dExistingX - dGnpX;
+//                    double dy = dExistingY - dGnpY;
+//                    double dz = dExistingZ - dGnpZ;
+
+//                    // Don't bother computing sqrt if the distance is large on any axis.
+//                    //if ((fabs(dx) <= GNP_DIAM) && (fabs(dy) <= GNP_DIAM) && (fabs(dz) <= GNP_DIAM))
+//                    if (fabs(dx) > GNP_DIAM) continue;
+//                    if (fabs(dy) > GNP_DIAM) continue;
+//                    if (fabs(dz) > GNP_DIAM) continue;
+
+//                    double dDist = sqrt(dx*dx + dy*dy + dz*dz);
+//                    if (dDist <= GNP_DIAM)
+//                        goto retry4;
+
+//                    printf("%d (%le, %le, %le)\n", nGnpIdx, dGnpX, dGnpY, dGnpZ);
+
+//                    int nCopyNumber = nGnpIdx;
+//                    new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
+//                    pGnpLog->SetVisAttributes(pVisAttributesGold);
+
+//                    aryGnpInfo[nGnpIdx].dPosX = dGnpX;
+//                    aryGnpInfo[nGnpIdx].dPosY = dGnpY;
+//                    aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
+//                }
+//            }
+//            else if (GNP_COUNT * SHELL_FRC20NM_30_40 <= nGnpIdx && GNP_COUNT*SHELL_FRC20NM_40_50) // Shell5
+//            {
+//                retry5:
+//                // Compute a random position for the GNP
+//                double dTheta = G4UniformRand() * 360.*deg;
+//                double dGnpX = (SHELL5_DIAM/2. * G4UniformRand() * cos(dTheta));
+//                double dGnpY = (SHELL5_DIAM/2. * G4UniformRand() * sin(dTheta));
+//                double dGnpZ = (VESSEL_HIGHT * G4UniformRand()) - VESSEL_HIGHT/2.0;
+
+//                // Check if this GNP is in the inner shell
+//                double dWhichShell = sqrt(dGnpX*dGnpX + dGnpY*dGnpY);
+//                if (dWhichShell < SHELL4_DIAM)
+//                    goto retry5;
+
+//                // Check if this GNP is over-lapping an existing GNP
+//                for (int nExistingGnpIdx = 0; nExistingGnpIdx < nGnpIdx; nExistingGnpIdx++)
+//                {
+//                    double dExistingX = aryGnpInfo[nExistingGnpIdx].dPosX;
+//                    double dExistingY = aryGnpInfo[nExistingGnpIdx].dPosY;
+//                    double dExistingZ = aryGnpInfo[nExistingGnpIdx].dPosZ;
+
+//                    double dx = dExistingX - dGnpX;
+//                    double dy = dExistingY - dGnpY;
+//                    double dz = dExistingZ - dGnpZ;
+
+//                    // Don't bother computing sqrt if the distance is large on any axis.
+//                    //if ((fabs(dx) <= GNP_DIAM) && (fabs(dy) <= GNP_DIAM) && (fabs(dz) <= GNP_DIAM))
+//                    if (fabs(dx) > GNP_DIAM) continue;
+//                    if (fabs(dy) > GNP_DIAM) continue;
+//                    if (fabs(dz) > GNP_DIAM) continue;
+
+//                    double dDist = sqrt(dx*dx + dy*dy + dz*dz);
+//                    if (dDist <= GNP_DIAM)
+//                        goto retry5;
+
+//                    printf("%d (%le, %le, %le)\n", nGnpIdx, dGnpX, dGnpY, dGnpZ);
+
+//                    int nCopyNumber = nGnpIdx;
+//                    new G4PVPlacement(0, G4ThreeVector(dGnpX, dGnpY, dGnpZ), pGnpLog, "GnpPhys", pWorldLogic, false, nCopyNumber);
+//                    pGnpLog->SetVisAttributes(pVisAttributesGold);
+
+//                    aryGnpInfo[nGnpIdx].dPosX = dGnpX;
+//                    aryGnpInfo[nGnpIdx].dPosY = dGnpY;
+//                    aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
+//                }
+//            }
+//            else
+//            {
+//                G4cout << "Shell index error!!" << G4endl;
+//            }
+//        }
+
+//    }
+//    delete [] aryGnpInfo;
+//}
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

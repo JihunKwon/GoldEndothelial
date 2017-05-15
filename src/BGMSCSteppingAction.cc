@@ -5,99 +5,49 @@
 #include "G4CsvAnalysisManager.hh"
 #include "G4ThreeVector.hh"
 #include "G4VProcess.hh"
+#include "BGMSCRunAction.hh"
 
 #include "G4CsvAnalysisManager.hh"
 
+#define CellNumb 6
+BGMSCSteppingAction::BGMSCSteppingAction()
+{
+    EdepEndotherialTotal = 0;
+    for (int i = 0; i < CellNumb; i++)
+    {
+        EdepEndotherial[i] = 0;
+    }
+}
+BGMSCSteppingAction::~BGMSCSteppingAction()
+{
+    G4cout << "Total Edep to Total Endotherial cell is " << EdepEndotherialTotal/MeV << G4endl;
+    for (int i=0;i<CellNumb;i++)
+    {
+        G4cout << "Edept to Endotherial" << i << " cell is " << EdepEndotherial[i] << G4endl;
+    }
+    FILE* fp = fopen("Endotherial_cells.csv", "wt");
+    fprintf(fp, "CellIdx, Edep [MeV]\n");
+    for (int i=0; i<CellNumb; i++)
+    {
+        fprintf(fp, "%d, %f\n", i, EdepEndotherial[i]);
+    }
+    fclose(fp);
+}
 void BGMSCSteppingAction::UserSteppingAction(const G4Step* aStep)
 {
-    G4CsvAnalysisManager* analysisManager = G4CsvAnalysisManager::Instance();
 
-//    for (G4int i = 0; i < 200; i++){
-//        InEnergy[i] = {0};
-//        OutEnergy[i] = {0};
-//    }
-
-    if (aStep->GetPostStepPoint()->GetMaterial())
+    if (aStep->GetTrack()->GetVolume()->GetName() == "EndotherialPhys")
     {
-        if ((aStep->GetPostStepPoint()->GetMaterial()->GetName() == "G4_Au") &&
-                (aStep->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName() == "eIoni"))
-            i = i+1;
-
-        if (aStep->GetPostStepPoint()->GetMaterial()->GetName() == "G4_WATER")
-        {
-            Edep = Edep + aStep->GetTotalEnergyDeposit();
-
-            if ((aStep->GetTrack()->GetParticleDefinition()->GetParticleName() == "e-") &&
-                    (aStep->GetTrack()->GetParentID() != 0))
-            {
-                Edepout = Edepout + aStep->GetTotalEnergyDeposit();
-            }
-        }
-
-//        if ((aStep->GetPreStepPoint()->GetMaterial()->GetName() == "G4_WATER") &&
-//                (aStep->GetPostStepPoint()->GetMaterial()->GetName() == "G4_Au") &&
-//                (aStep->GetTrack()->GetParticleDefinition()->GetParticleName() == "e-"))    //if electron come into the GNP
-//        {
-//            G4double eEnergy = aStep->GetPostStepPoint()->GetKineticEnergy()/keV;
-//            //G4CsvAnalysisManager* analysisManager = G4CsvAnalysisManager::Instance();
-//            analysisManager->FillH1(0, eEnergy);
-//            for (G4int j = 0; j < 200; j++){
-//                if ((j < eEnergy) && (eEnergy <= (j+1)))
-//                {
-//                    InEnergy[j] = InEnergy[j] + 1;
-//                    break;
-//                }
-//            }
-//        }
-
-//        if ((aStep->GetPreStepPoint()->GetMaterial()->GetName() == "G4_Au") &&
-//                (aStep->GetPostStepPoint()->GetMaterial()->GetName() == "G4_WATER") &&
-//                (aStep->GetTrack()->GetParticleDefinition()->GetParticleName() == "e-"))    // if electron escape GNP
-//        {
-//            G4double eOutEnergy = aStep->GetPostStepPoint()->GetKineticEnergy()/keV;
-//            //G4CsvAnalysisManager* analysisManager = G4CsvAnalysisManager::Instance();
-//            //analysisManager->FillH1(1, eOutEnergy);
-//            for (G4int j = 0; j < 200; j++){
-//                if ((j < eOutEnergy) && (eOutEnergy <= (j+1)))
-//                {
-//                    OutEnergy[j] = OutEnergy[j] + 1;
-//                    break;
-//                }
-//            }
-//        }
-
-        if (aStep->GetPostStepPoint()->GetMaterial()->GetName() == "G4_Au")
-        {
-            if (aStep->GetTrack()->GetParticleDefinition()->GetParticleName() == "e-")
-                SelfAbsE = SelfAbsE + aStep->GetTotalEnergyDeposit();
-            if (aStep->GetTrack()->GetParticleDefinition()->GetParticleName() == "gamma")
-                SelfAbsG = SelfAbsG + aStep->GetTotalEnergyDeposit();
-        }
+        EdepEndotherialTotal = EdepEndotherialTotal + aStep->GetTotalEnergyDeposit();
     }
 
-    if (aStep->GetTrack()->GetVolume()->GetName() == "NanoTubsPhys")
-    {
-        if (aStep->GetTrack()->GetParticleDefinition()->GetParticleName() == "e-")
-        {
-            if (aStep->IsFirstStepInVolume())
-            {
-                G4double eEnergy = aStep->GetPostStepPoint()->GetKineticEnergy()/keV;
-                analysisManager->FillH1(0, eEnergy);
-            }
-            if (aStep->IsLastStepInVolume())
-            {
-                G4double eOutEnergy = aStep->GetPostStepPoint()->GetKineticEnergy()/keV;
-                analysisManager->FillH1(1, eOutEnergy);
-            }
-        }
-    }
-//    std::ofstream WriteInEnergy("Electron_InEdist.txt");
-//    for (G4int k = 0; k < 200; k++){
-//        WriteInEnergy << k << " " << InEnergy[k] << "\n";
-//    }
-//    std::ofstream WriteOutEnergy("Electron_OutEdist.txt");
-//    for (int k = 0; k < 200; k++){
-//        WriteOutEnergy << k << " " << OutEnergy[k] << "\n";
-//    }
+    G4TouchableHandle touchable = aStep->GetPreStepPoint()->GetTouchableHandle();		// G4TouchableHandle
+    G4VPhysicalVolume* pPhysVolume = touchable->GetVolume();			// G4VPhysicalVolume*
 
+    G4String strPreName = pPhysVolume->GetName();
+    if (strPreName == "EndotherialPhys")
+    {
+        G4int copyNo = pPhysVolume->GetCopyNo();
+        EdepEndotherial[copyNo] += aStep->GetTotalEnergyDeposit();
+    }
 }

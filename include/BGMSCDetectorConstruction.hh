@@ -14,12 +14,9 @@ class G4UserLimits;
 using namespace CLHEP;
 
 /////////////////////////////////////////////////////////////////////////////
-struct SVesicleInfo
+struct SCellInfo
 {
-    double dPosX;
-    double dPosY;
-    double dPosZ;
-    double dDiam;
+    int nCellIdx;
 };
 /////////////////////////////////////////////////////////////////////////////
 
@@ -43,15 +40,14 @@ private:
 
 protected:
     DetectorMessenger* m_pDetectorMessenger;
-    G4double m_dCellSide;
-    G4double m_dClusterSide;
+    G4double m_dWorldSide;
     G4int m_nGnpCount;
     G4String m_strDistribution;
+    G4int m_nCellCount;
 
+    void DistributeGnpsSurface (G4LogicalVolume *pWorldLog);
     void DistributeGnpsRandom (G4LogicalVolume *pCubeLog);
-
-    void DistributeVesiclesInSphereCluster(G4LogicalVolume* pCubeLog, SVesicleInfo aryVesicleInfo[]);
-    void DistributeGnpsInVesicles(G4LogicalVolume* pCubeLog, SVesicleInfo aryVesicleInfo[]);
+    void DistributeGnps8PHI(G4LogicalVolume *pCubeLog);
 };
 
 #endif
