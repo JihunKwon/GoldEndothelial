@@ -23,7 +23,7 @@ void BGMSCEventAction::BeginOfEventAction(const G4Event* event)
 
 void BGMSCEventAction::EndOfEventAction(const G4Event* event)
 {
-    if (event->GetEventID()%100000 == 0)
+    if (event->GetEventID()%1000000 == 0)
         G4cout << "Event #" << event->GetEventID() << G4endl;
 }
 
