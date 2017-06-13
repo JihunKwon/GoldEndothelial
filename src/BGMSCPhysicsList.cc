@@ -32,6 +32,8 @@
 
 #include "G4UAtomicDeexcitation.hh"
 
+#include "StepMax.hh"
+
 using namespace CLHEP;
 
 BGMSCPhysicsList::BGMSCPhysicsList() : G4VModularPhysicsList()
@@ -41,6 +43,8 @@ BGMSCPhysicsList::BGMSCPhysicsList() : G4VModularPhysicsList()
   cutForGamma     = defaultCutValue;
   cutForElectron  = defaultCutValue;
   cutForPositron  = defaultCutValue;
+
+  stepMaxProcess  = 0;
 
   G4EmParameters* emParameters = G4EmParameters::Instance();
   emParameters->SetMinEnergy(0*eV);
@@ -85,6 +89,10 @@ void BGMSCPhysicsList::ConstructProcess()
     de->SetPIXE(true);
     de->SetAugerCascade(true);
     G4LossTableManager::Instance()->SetAtomDeexcitation(de);
+
+    // step limitation (as a full process)
+    //
+    AddStepMax();
 }
 
 //void PhysicsLists::AddP
@@ -98,4 +106,21 @@ void BGMSCPhysicsList::SetCuts()
     SetCutValue(cutForPositron, "e+");
 
     G4ProductionCutsTable::GetProductionCutsTable()->SetEnergyRange(250*eV, 1*GeV);
+}
+
+void BGMSCPhysicsList::AddStepMax()
+{
+    // Step limitation seen as a process
+    stepMaxProcess = new StepMax();
+
+    theParticleIterator->reset();
+    while ((*theParticleIterator)()){
+        G4ParticleDefinition* particle = theParticleIterator->value();
+        G4ProcessManager* pmanager = particle->GetProcessManager();
+
+        if (stepMaxProcess->IsApplicable(*particle) && pmanager)
+        {
+            pmanager->AddDiscreteProcess(stepMaxProcess);
+        }
+    }
 }

@@ -10,7 +10,7 @@
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
 
-#define WORLD_SIDE (100. * um)
+#define WORLD_SIDE (25. * um)
 
 using namespace CLHEP;
 

@@ -26,26 +26,33 @@
 #include "math.h"
 using namespace CLHEP;
 
+/*
+10mg 3106
+20mg 6211
+30mg 9317
+40mg 12422
+50mg 15528
+*/
 ///////////////////////////////////////////////////////////////////
-#define WORLD_SIDE (100. * um)
-#define VESSEL_OUTER_DIAM (10.0 * um)
-#define VESSEL_INNER_DIAM (8.0 * um)
+#define WORLD_SIDE (25. * um)
+#define VESSEL_OUTER_DIAM (20.0 * um)
+#define VESSEL_INNER_DIAM (16.0 * um)
 #define VESSEL_HIGHT (10.0 * um)
 #define GNP_DIAM (100 * nm) // diameter!!
-#define GNP_COUNT 9317 // Number!
-#define VESSEL_SPACE (5. * um)
-#define VESSEL_SHELL 5
-#define CELL_COUNT 6
-#define SHELL1_DIAM (5.0 * um)
-#define SHELL2_DIAM (10.0 * um)
-#define SHELL3_DIAM (15.0 * um)
-#define SHELL4_DIAM (20.0 * um)
-#define SHELL5_DIAM (25.0 * um)
-#define SHELL_FRC20NM_0_10 0.4332
-#define SHELL_FRC20NM_10_20 0.2594
-#define SHELL_FRC20NM_20_30 0.1431
-#define SHELL_FRC20NM_30_40 0.08949
-#define SHELL_FRC20NM_40_50 0.07479
+#define GNP_COUNT 15528 // Number!
+#define CELL_COUNT 60
+//#define VESSEL_SPACE (5. * um)
+//#define VESSEL_SHELL 5
+//#define SHELL1_DIAM (5.0 * um)
+//#define SHELL2_DIAM (10.0 * um)
+//#define SHELL3_DIAM (15.0 * um)
+//#define SHELL4_DIAM (20.0 * um)
+//#define SHELL5_DIAM (25.0 * um)
+//#define SHELL_FRC20NM_0_10 0.4332
+//#define SHELL_FRC20NM_10_20 0.2594
+//#define SHELL_FRC20NM_20_30 0.1431
+//#define SHELL_FRC20NM_30_40 0.08949
+//#define SHELL_FRC20NM_40_50 0.07479
 ///////////////////////////////////////////////////////////////////
 
 BGMSCDetectorConstruction::BGMSCDetectorConstruction()
@@ -93,9 +100,9 @@ G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
     for (int nCellIdx = 0; nCellIdx < m_nCellCount; nCellIdx++)
     {
         G4RotationMatrix* rotm = new G4RotationMatrix;
-        rotm->rotateZ((nCellIdx+1) * 60*deg - 90*deg); //Set the first position 0 oclock., clock wise.
+        rotm->rotateZ((nCellIdx+1) * 6*deg - 90*deg); //Set the first position 0 oclock., clock wise.
 
-        G4Tubs* pEndotherialTubs = new G4Tubs("EndotherialTubs", VESSEL_INNER_DIAM/2, VESSEL_OUTER_DIAM/2, VESSEL_HIGHT/2, 0*deg, 60*deg);
+        G4Tubs* pEndotherialTubs = new G4Tubs("EndotherialTubs", VESSEL_INNER_DIAM/2, VESSEL_OUTER_DIAM/2, VESSEL_HIGHT/2, 0*deg, 6*deg); // Last deg is the size of cell!
         G4LogicalVolume *pEndotherialLogic = new G4LogicalVolume(pEndotherialTubs, water, "EndotherialLog");
         G4VPhysicalVolume *EndotherialPhys = new G4PVPlacement(rotm, G4ThreeVector(), pEndotherialLogic, "EndotherialPhys", pWorldLogic, 0, nCellIdx);
         pEndotherialLogic->SetVisAttributes(pVisAttributesEndotherial);
@@ -209,7 +216,7 @@ void BGMSCDetectorConstruction::DistributeGnpsSurface(G4LogicalVolume *pWorldLog
 //                else if(dGnpX<0 && dGnpY<0) theta = theta+180; //3rd
 //                else if(dGnpX>0 && dGnpY<0) theta = theta+270; //4th
 
-                for (int i=0; i<360; i++)
+                for (int i=0; i<60; i++)
                 {
                     if((i<=theta) && (theta<(i+1)))
                     {
@@ -228,7 +235,7 @@ void BGMSCDetectorConstruction::DistributeGnpsSurface(G4LogicalVolume *pWorldLog
                 aryGnpInfo[nGnpIdx].dPosZ = dGnpZ;
     }
     FILE* fp =fopen("position.txt", "wt");
-    for (int i=0; i<360; i++)
+    for (int i=0; i<60; i++)
     {
         printf("%d %d\n", i, ary[i]);
         fprintf(fp, "%d %d\n", i, ary[i]);

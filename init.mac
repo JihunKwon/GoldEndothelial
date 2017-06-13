@@ -1,0 +1,49 @@
+########################################
+# define cylindrical scoring mesh
+#
+#/score/create/cylinderMesh cylMesh_1
+#                        R  Z(-5 to 5)
+#/score/mesh/cylinderSize 5. 5. um
+#/score/mesh/translate/xyz 0.1 0.1 0.0 um
+#                iR iZ
+#/score/mesh/nBin 3 3 3
+#
+#/score/quantity/energyDeposit eDep
+#
+#/score/close
+#
+#/score/list
+#
+#/run/beamOn 1000000
+#Output result
+#/score/dumpQuantityToFile cylMesh_1 eDep Endothelial_edep.txt
+########################################
+#
+
+/testem/stepMax 5 nm
+########################################
+# define cubic scoring mesh
+#
+/score/create/boxMesh boxMesh_1
+#
+# bin=200nm.
+# Make the box half bin larger. ex) 5um->5.05um
+/score/mesh/boxSize 10.1 10.1 10.1 um
+/score/mesh/translate/xyz 0.00001 0.00001 0.0 nm
+#
+/score/mesh/nBin 101 101 101
+#
+/score/quantity/energyDeposit eDep
+#
+/score/close
+#
+/score/list
+#
+
+/run/printProgress 10000000
+#/run/beamOn 3000000000
+/run/beamOn 3
+#Output result
+/score/dumpQuantityToFile boxMesh_1 eDep Endothelial_edep.txt
+########################################
+#

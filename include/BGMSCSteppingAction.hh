@@ -18,7 +18,7 @@ public:
 
 private:
     G4double EdepEndotherialTotal;
-    G4double EdepEndotherial[30];
+    G4double EdepEndotherial[70];
 };
 
 #endif

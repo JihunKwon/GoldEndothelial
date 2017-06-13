@@ -20,6 +20,7 @@ TARGET_LINK_LIBRARIES(BYGNP ${Geant4_LIBRARIES})
 
 set(BYGNP_SCRIPTS
     init_vis.mac
+    init.mac
 )
 
 foreach(_script ${BYGNP_SCRIPTS})
