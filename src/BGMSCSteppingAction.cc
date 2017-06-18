@@ -9,7 +9,7 @@
 
 #include "G4CsvAnalysisManager.hh"
 
-#define CellNumb 60
+#define CellNumb 30
 BGMSCSteppingAction::BGMSCSteppingAction()
 {
     EdepEndotherialTotal = 0;

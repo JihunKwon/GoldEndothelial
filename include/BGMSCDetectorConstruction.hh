@@ -47,7 +47,8 @@ protected:
 
     void DistributeGnpsSurface (G4LogicalVolume *pWorldLog);
     void DistributeGnpsRandom (G4LogicalVolume *pCubeLog);
-    void DistributeGnps8PHI(G4LogicalVolume *pCubeLog);
+    void DistributeGnps8HPI(G4LogicalVolume *pCubeLog);
+    void DistributeGnps24HPI(G4LogicalVolume *pCubeLog);
 };
 
 #endif
