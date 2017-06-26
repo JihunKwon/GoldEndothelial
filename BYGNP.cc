@@ -1,4 +1,4 @@
-#undef G4MULTITHREADED
+//#undef G4MULTITHREADED
 
 #undef G4VIS_USE
 
@@ -57,7 +57,7 @@ int main(int argc,char** argv)
     runManager->SetUserInitialization(massWorld);
 
     G4VModularPhysicsList* physicsList = new BGMSCPhysicsList;
-    physicsList->SetVerboseLevel(0);
+    physicsList->SetVerboseLevel(4);
     runManager->SetUserInitialization(physicsList);
 
     BGMSCActionInitialization* actionInit = new BGMSCActionInitialization(massWorld);
@@ -88,9 +88,9 @@ int main(int argc,char** argv)
   G4UImanager* pUI = G4UImanager::GetUIpointer();
 
   //pUI->ApplyCommand("/tracking/verbose 1");
-  pUI->ApplyCommand("/testem/stepMax 5 nm");
+  pUI->ApplyCommand("/testem/stepMax 10 nm");
 
-  runManager->BeamOn(2000000000); // 100000000
+  runManager->BeamOn(100000000); // 100000000 2000000000
 
   delete runManager;
   return 0;
