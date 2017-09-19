@@ -49,8 +49,8 @@ using namespace CLHEP;
 #define VESSEL_OUTER_DIAM (20.0 * um)
 #define VESSEL_INNER_DIAM (16.0 * um)
 #define VESSEL_HIGHT (10.0 * um)
-#define GNP_DIAM (20 * nm) // diameter!!
-#define GNP_COUNT 1552795// Number! 15528*0.7176=11143
+#define GNP_DIAM (100 * nm) // diameter!!
+#define GNP_COUNT 6211// Number! 15528*0.7176=11143
 #define CELL_COUNT 30
 #define SHELL1_DIAM (20.0 * um)
 #define SHELL2_DIAM (40.0 * um)
@@ -58,53 +58,55 @@ using namespace CLHEP;
 #define SHELL4_DIAM (80.0 * um)
 #define SHELL5_DIAM (100.0 * um)
 
+
 //4HPI
-#define SHELL_FRC20NM_4HPI_0_10 0.6926
-#define SHELL_FRC20NM_4HPI_10_20 0.2326
-#define SHELL_FRC20NM_4HPI_20_30 0.0748
-#define SHELL_FRC20NM_4HPI_30_40 0.
-#define SHELL_FRC20NM_4HPI_40_50 0.
-#define SHELL_FRC100NM_4HPI_0_10 0.9032
-#define SHELL_FRC100NM_4HPI_10_20 0.0813
-#define SHELL_FRC100NM_4HPI_20_30 0.0156
-#define SHELL_FRC100NM_4HPI_30_40 0.
-#define SHELL_FRC100NM_4HPI_40_50 0.
+#define SHELL_FRC20NM_4HPI_0_10 0.6345
+#define SHELL_FRC20NM_4HPI_10_20 0.2886
+#define SHELL_FRC20NM_4HPI_20_30 0.0657
+#define SHELL_FRC20NM_4HPI_30_40 0.0100
+#define SHELL_FRC20NM_4HPI_40_50 0.0011
+#define SHELL_FRC100NM_4HPI_0_10 0.7180
+#define SHELL_FRC100NM_4HPI_10_20 0.2379
+#define SHELL_FRC100NM_4HPI_20_30 0.0394
+#define SHELL_FRC100NM_4HPI_30_40 0.0044
+#define SHELL_FRC100NM_4HPI_40_50 0.0004
 
 //8HPI
-#define SHELL_FRC20NM_8HPI_0_10 0.4332
-#define SHELL_FRC20NM_8HPI_10_20 0.2594
-#define SHELL_FRC20NM_8HPI_20_30 0.1431
-#define SHELL_FRC20NM_8HPI_30_40 0.0895
-#define SHELL_FRC20NM_8HPI_40_50 0.0748
-#define SHELL_FRC100NM_8HPI_0_10 0.5781
-#define SHELL_FRC100NM_8HPI_10_20 0.3251
-#define SHELL_FRC100NM_8HPI_20_30 0.0565
-#define SHELL_FRC100NM_8HPI_30_40 0.0248
-#define SHELL_FRC100NM_8HPI_40_50 0.0156
+#define SHELL_FRC20NM_8HPI_0_10 0.4026
+#define SHELL_FRC20NM_8HPI_10_20 0.2517
+#define SHELL_FRC20NM_8HPI_20_30 0.1507
+#define SHELL_FRC20NM_8HPI_30_40 0.1037
+#define SHELL_FRC20NM_8HPI_40_50 0.0913
+#define SHELL_FRC100NM_8HPI_0_10 0.5155
+#define SHELL_FRC100NM_8HPI_10_20 0.3039
+#define SHELL_FRC100NM_8HPI_20_30 0.0803
+#define SHELL_FRC100NM_8HPI_30_40 0.0539
+#define SHELL_FRC100NM_8HPI_40_50 0.0464
 
 //16HPI
-#define SHELL_FRC20NM_16HPI_0_10 0.1877
-#define SHELL_FRC20NM_16HPI_10_20 0.2247
-#define SHELL_FRC20NM_16HPI_20_30 0.1913
-#define SHELL_FRC20NM_16HPI_30_40 0.1518
-#define SHELL_FRC20NM_16HPI_40_50 0.1317
-#define SHELL_FRC100NM_16HPI_0_10 0.3342
-#define SHELL_FRC100NM_16HPI_10_20 0.3758
-#define SHELL_FRC100NM_16HPI_20_30 0.1710
-#define SHELL_FRC100NM_16HPI_30_40 0.0654
-#define SHELL_FRC100NM_16HPI_40_50 0.0373
+#define SHELL_FRC20NM_16HPI_0_10 0.1621
+#define SHELL_FRC20NM_16HPI_10_20 0.2949
+#define SHELL_FRC20NM_16HPI_20_30 0.2683
+#define SHELL_FRC20NM_16HPI_30_40 0.1628
+#define SHELL_FRC20NM_16HPI_40_50 0.0740
+#define SHELL_FRC100NM_16HPI_0_10 0.2658
+#define SHELL_FRC100NM_16HPI_10_20 0.3522
+#define SHELL_FRC100NM_16HPI_20_30 0.2333
+#define SHELL_FRC100NM_16HPI_30_40 0.1031
+#define SHELL_FRC100NM_16HPI_40_50 0.0341
 
 //24HPI
-#define SHELL_FRC20NM_24HPI_0_10 0.0813
-#define SHELL_FRC20NM_24HPI_10_20 0.1460
-#define SHELL_FRC20NM_24HPI_20_30 0.1680
-#define SHELL_FRC20NM_24HPI_30_40 0.1643//1643
-#define SHELL_FRC20NM_24HPI_40_50 0.1580//1580 // sum=0.7176
-#define SHELL_FRC100NM_24HPI_0_10 0.1932
-#define SHELL_FRC100NM_24HPI_10_20 0.3259
-#define SHELL_FRC100NM_24HPI_20_30 0.2399
-#define SHELL_FRC100NM_24HPI_30_40 0.1229
-#define SHELL_FRC100NM_24HPI_40_50 0.0670 // sum=0.9489
+#define SHELL_FRC20NM_24HPI_0_10 0.0652
+#define SHELL_FRC20NM_24HPI_10_20 0.1781
+#define SHELL_FRC20NM_24HPI_20_30 0.2431
+#define SHELL_FRC20NM_24HPI_30_40 0.2212
+#define SHELL_FRC20NM_24HPI_40_50 0.1509
+#define SHELL_FRC100NM_24HPI_0_10 0.1370
+#define SHELL_FRC100NM_24HPI_10_20 0.2723
+#define SHELL_FRC100NM_24HPI_20_30 0.2707
+#define SHELL_FRC100NM_24HPI_30_40 0.1793
+#define SHELL_FRC100NM_24HPI_40_50 0.0891
+
 ///////////////////////////////////////////////////////////////////
 
 BGMSCDetectorConstruction::BGMSCDetectorConstruction()
@@ -112,7 +114,7 @@ BGMSCDetectorConstruction::BGMSCDetectorConstruction()
 {
     m_dWorldSide = WORLD_SIDE;
     m_nGnpCount = GNP_COUNT;
-    m_strDistribution = "24HPI";   // Constrained  Random None 8HPI 24HPI
+    m_strDistribution = "Random";   // Constrained  Random None 8HPI 24HPI
     m_nCellCount = CELL_COUNT;
 }
 
@@ -131,6 +133,14 @@ G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
     pVisAttributesEndotherial->SetVisibility(true);
     pVisAttributesEndotherial->SetColor(1.0, 0.0, 0.0); // red
 
+//    G4VisAttributes* pVisAttributesShell = new G4VisAttributes;
+//    pVisAttributesShell->SetForceWireframe(true);
+//    pVisAttributesShell->SetForceAuxEdgeVisible(true);
+//    pVisAttributesShell->SetForceSolid(false);
+//    pVisAttributesShell->SetVisibility(true);
+//    pVisAttributesShell->SetColor(1.0, 1.0, 1.0); // cyan
+
+
     // Build materials
     G4NistManager* nistManager = G4NistManager::Instance();
     G4Material* Au = nistManager->FindOrBuildMaterial("G4_Au");
@@ -147,6 +157,15 @@ G4VPhysicalVolume* BGMSCDetectorConstruction::Construct()
 //    G4LogicalVolume *pEndotherialLogic = new G4LogicalVolume(pEndotherialTubs, water, "EndotherialLog");
 //    G4VPhysicalVolume *pEndotherialPhys = new G4PVPlacement(0, G4ThreeVector(), pEndotherialLogic, "EndotherialPhys", pWorldLogic, 0, 0);
 //    pEndotherialLogic->SetVisAttributes(pVisAttributesEndotherial);
+
+//    // Psudo Shells
+//    for (int ShellNo = 1; ShellNo <= 5; ShellNo++)
+//    {
+//        G4Tubs* pShellTubs = new G4Tubs("ShellTubes", 0, VESSEL_OUTER_DIAM/2*ShellNo, VESSEL_HIGHT/2, 0*deg, 360*deg);
+//        G4LogicalVolume *pShellLogic = new G4LogicalVolume(pShellTubs, water, "ShellLog");
+//        G4VPhysicalVolume *pShellPhys = new G4PVPlacement(0, G4ThreeVector(), pShellLogic, "ShellPhys", pWorldLogic, 0, 0);
+//        pShellLogic->SetVisAttributes(pVisAttributesShell);
+//    }
 
     // Parameterize each Endotherial cell.
     for (int nCellIdx = 0; nCellIdx < m_nCellCount; nCellIdx++)

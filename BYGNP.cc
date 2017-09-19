@@ -90,7 +90,7 @@ int main(int argc,char** argv)
   //pUI->ApplyCommand("/tracking/verbose 1");
   pUI->ApplyCommand("/testem/stepMax 10 nm");
 
-  runManager->BeamOn(100000000); // 100000000 2000000000
+  runManager->BeamOn(1410065407); // 25000000 1410065407
 
   delete runManager;
   return 0;

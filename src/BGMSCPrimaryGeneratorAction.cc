@@ -10,7 +10,8 @@
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
 
-#define WORLD_SIDE (25. * um)
+//#define WORLD_SIDE (25. * um)
+#define WORLD_SIDE (50. * um)
 
 using namespace CLHEP;
 
@@ -48,50 +49,37 @@ BGMSCPrimaryGeneratorAction::BGMSCPrimaryGeneratorAction()
 //        this->setEnergyToGamma()
 
 
-//        /////X-Z////Vertical
-//        G4SPSPosDistribution* positionG = CircleSourceG->GetPosDist();
-//        positionG->SetPosDisType("Plane");
-//        positionG->SetPosDisShape("Square");
-//        positionG->SetHalfX(WORLD_SIDE/2);
-//        positionG->SetHalfY(WORLD_SIDE/2);
-//        positionG->SetHalfZ(WORLD_SIDE/2);
-//        positionG->SetCentreCoords(G4ThreeVector(0*m, WORLD_SIDE/2,  0*um));
-//        positionG->SetPosRot1(G4ThreeVector(1, 0, 0));
-//        positionG->SetPosRot2(G4ThreeVector(0, 0, 1));
-//        G4SPSAngDistribution* angularG = CircleSourceG->GetAngDist();
-//        angularG->SetParticleMomentumDirection(G4ThreeVector(0.0,-1.0,0.0));
-//        angularG->DefineAngRefAxes("angref1", G4ThreeVector(0.0,1.0,0.0));
-//        CircleSourceG->SetNumberOfParticles(1);
+/*
+                /////X-Y////Paralell
+                G4SPSPosDistribution* positionG = CircleSourceG->GetPosDist();
+                positionG->SetPosDisType("Plane");
+                positionG->SetPosDisShape("Square");
+                positionG->SetHalfX(WORLD_SIDE/2);
+                positionG->SetHalfY(WORLD_SIDE/2);
+                positionG->SetHalfZ(WORLD_SIDE/2);
+                positionG->SetCentreCoords(G4ThreeVector(0*m, 0*um,  100/2*um));
+                positionG->SetPosRot1(G4ThreeVector(1, 0, 0));
+                positionG->SetPosRot2(G4ThreeVector(0, 1, 0));
+                G4SPSAngDistribution* angularG = CircleSourceG->GetAngDist();
+                angularG->SetParticleMomentumDirection(G4ThreeVector(0.0,0.0,-1.0));
+                angularG->DefineAngRefAxes("angref1", G4ThreeVector(0.0,0.0,1.0));
+                CircleSourceG->SetNumberOfParticles(1);
+*/
 
-//        /////X-Y////Paralell
-//        G4SPSPosDistribution* positionG = CircleSourceG->GetPosDist();
-//        positionG->SetPosDisType("Plane");
-//        positionG->SetPosDisShape("Square");
-//        positionG->SetHalfX(WORLD_SIDE/2);
-//        positionG->SetHalfY(WORLD_SIDE/2);
-//        positionG->SetHalfZ(WORLD_SIDE/2);
-//        positionG->SetCentreCoords(G4ThreeVector(0*m, 0*um,  WORLD_SIDE/2));
-//        positionG->SetPosRot1(G4ThreeVector(1, 0, 0));
-//        positionG->SetPosRot2(G4ThreeVector(0, 1, 0));
-//        G4SPSAngDistribution* angularG = CircleSourceG->GetAngDist();
-//        angularG->SetParticleMomentumDirection(G4ThreeVector(0.0,0.0,-1.0));
-//        angularG->DefineAngRefAxes("angref1", G4ThreeVector(0.0,0.0,1.0));
-//        CircleSourceG->SetNumberOfParticles(1);
-
-        /////X-Z////Vertical HPI
-        G4SPSPosDistribution* positionG = CircleSourceG->GetPosDist();
-        positionG->SetPosDisType("Plane");
-        positionG->SetPosDisShape("Square");
-        positionG->SetHalfX(100/2*um);
-        positionG->SetHalfY(WORLD_SIDE/2);
-        positionG->SetHalfZ(25/2*um);
-        positionG->SetCentreCoords(G4ThreeVector(0*m, 100/2*um,  0*um)); // if World is 100um
-        positionG->SetPosRot1(G4ThreeVector(1, 0, 0));
-        positionG->SetPosRot2(G4ThreeVector(0, 0, 1));
-        G4SPSAngDistribution* angularG = CircleSourceG->GetAngDist();
-        angularG->SetParticleMomentumDirection(G4ThreeVector(0.0,-1.0,0.0));
-        angularG->DefineAngRefAxes("angref1", G4ThreeVector(0.0,1.0,0.0));
-        CircleSourceG->SetNumberOfParticles(1);
+                /////X-Z////Vertical HPI
+                G4SPSPosDistribution* positionG = CircleSourceG->GetPosDist();
+                positionG->SetPosDisType("Plane");
+                positionG->SetPosDisShape("Square");
+                positionG->SetHalfX(WORLD_SIDE/2);
+                positionG->SetHalfY(WORLD_SIDE/2);
+                positionG->SetHalfZ(25/2*um);
+                positionG->SetCentreCoords(G4ThreeVector(0*m, 100/2*um,  0*um)); // if World is 100um
+                positionG->SetPosRot1(G4ThreeVector(1, 0, 0));
+                positionG->SetPosRot2(G4ThreeVector(0, 0, 1));
+                G4SPSAngDistribution* angularG = CircleSourceG->GetAngDist();
+                angularG->SetParticleMomentumDirection(G4ThreeVector(0.0,-1.0,0.0));
+                angularG->DefineAngRefAxes("angref1", G4ThreeVector(0.0,1.0,0.0));
+                CircleSourceG->SetNumberOfParticles(1);
 
 //        /////Y-Z////
 //        G4SPSPosDistribution* positionG = CircleSourceG->GetPosDist();
@@ -114,7 +102,7 @@ BGMSCPrimaryGeneratorAction::~BGMSCPrimaryGeneratorAction()
 {
     //delete CircleSource;
     delete CircleSourceG;
-    //delete fParticleGun;
+  //delete fParticleGun;
 }
 
 void BGMSCPrimaryGeneratorAction::GeneratePrimaries(G4Event* event)

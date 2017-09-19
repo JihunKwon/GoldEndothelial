@@ -18,28 +18,29 @@ BGMSCSteppingAction::BGMSCSteppingAction()
         EdepEndotherial[i] = 0;
     }
 }
+
 BGMSCSteppingAction::~BGMSCSteppingAction()
 {
-    G4cout << "Total Edep to Total Endotherial cell is " << EdepEndotherialTotal/MeV << G4endl;
-    for (int i=0;i<CellNumb;i++)
-    {
-        G4cout << "Edept to Endotherial" << i << " cell is " << EdepEndotherial[i] << G4endl;
+    //    G4cout << "Total Edep to Total Endotherial cell is " << EdepEndotherialTotal/MeV << G4endl;
+        for (int i=0;i<CellNumb;i++)
+        {
+            G4cout << "EdeptToEndotherial " << i << " " << EdepEndotherial[i] << G4endl;
+        }
+    //    FILE* fp = fopen("Endotherial_Boxes.csv", "wt");
+    //    fprintf(fp, "CellIdx, Edep [MeV]\n");
+    //    for (int i=0; i<BoxNumb; i++)
+    //    {
+    //        fprintf(fp, "%d, %f\n", i, EdepEndotherial[i]);
+    //    }
+    //    fclose(fp);
     }
-    FILE* fp = fopen("Endotherial_cells.csv", "wt");
-    fprintf(fp, "CellIdx, Edep [MeV]\n");
-    for (int i=0; i<CellNumb; i++)
+    void BGMSCSteppingAction::UserSteppingAction(const G4Step* aStep)
     {
-        fprintf(fp, "%d, %f\n", i, EdepEndotherial[i]);
-    }
-    fclose(fp);
-}
-void BGMSCSteppingAction::UserSteppingAction(const G4Step* aStep)
-{
 
-    if (aStep->GetTrack()->GetVolume()->GetName() == "EndotherialPhys")
-    {
-        EdepEndotherialTotal = EdepEndotherialTotal + aStep->GetTotalEnergyDeposit();
-    }
+    //    if (aStep->GetTrack()->GetVolume()->GetName() == "EndotherialBoxPhys")
+    //    {
+    //        EdepEndotherialTotal = EdepEndotherialTotal + aStep->GetTotalEnergyDeposit();
+    //    }
 
     G4TouchableHandle touchable = aStep->GetPreStepPoint()->GetTouchableHandle();		// G4TouchableHandle
     G4VPhysicalVolume* pPhysVolume = touchable->GetVolume();			// G4VPhysicalVolume*
@@ -51,3 +52,4 @@ void BGMSCSteppingAction::UserSteppingAction(const G4Step* aStep)
         EdepEndotherial[copyNo] += aStep->GetTotalEnergyDeposit();
     }
 }
+
