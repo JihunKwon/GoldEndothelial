@@ -50,7 +50,7 @@ using namespace CLHEP;
 #define VESSEL_INNER_DIAM (16.0 * um)
 #define VESSEL_HIGHT (10.0 * um)
 #define GNP_DIAM (100 * nm) // diameter!!
-#define GNP_COUNT 6211// Number! 15528*0.7176=11143
+#define GNP_COUNT 3106 // Number! 15528*0.7176=11143
 #define CELL_COUNT 30
 #define SHELL1_DIAM (20.0 * um)
 #define SHELL2_DIAM (40.0 * um)
